@@ -8,18 +8,21 @@ export function initSendgrid() {
   return sgMail;
 }
 
+export function sanitizeEmail(email) {
+  return (email || "").trim();
+}
 export function isValidEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || "");
+  const e = sanitizeEmail(email).toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 }
 
-/** Create a deterministic 6-digit code for a 10-minute window (no storage). */
+/** Deterministic 6-digit code for a 10-minute window (no storage, works across instances). */
 const WINDOW_SEC = 600;
 function codeFor(email, windowIndex) {
   const h = crypto
     .createHmac("sha256", process.env.VERIFICATION_SECRET)
-    .update((email || "").toLowerCase() + ":" + String(windowIndex))
+    .update(email.toLowerCase() + ":" + String(windowIndex))
     .digest("hex");
-  // Take last 6 digits from hash
   return String(parseInt(h.slice(-8), 16) % 1_000_000).padStart(6, "0");
 }
 export function makeVerificationCode(email, nowMs = Date.now()) {
@@ -27,23 +30,20 @@ export function makeVerificationCode(email, nowMs = Date.now()) {
   return codeFor(email, idx);
 }
 export function checkVerificationCode(email, code, nowMs = Date.now()) {
+  const e = sanitizeEmail(email).toLowerCase();
   const idx = Math.floor(nowMs / 1000 / WINDOW_SEC);
-  const candidates = [codeFor(email, idx), codeFor(email, idx - 1)]; // allow slight skew
+  const candidates = [codeFor(e, idx), codeFor(e, idx - 1)]; // allow slight clock skew
   return candidates.includes((code || "").trim());
 }
 
-/** Safe JSON body for Vercel Node functions. */
+/** Safe JSON parse for Vercel Node functions. */
 export async function parseJson(req) {
   if (req.body && typeof req.body === "object") return req.body;
-  if (typeof req.body === "string") {
-    try { return JSON.parse(req.body); } catch { return {}; }
-  }
+  if (typeof req.body === "string") { try { return JSON.parse(req.body); } catch { return {}; } }
   try {
     const chunks = [];
     for await (const ch of req) chunks.push(Buffer.isBuffer(ch) ? ch : Buffer.from(ch));
     const raw = Buffer.concat(chunks).toString("utf8");
     return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
+  } catch { return {}; }
 }
