@@ -19,7 +19,7 @@ export function isValidEmail(email) {
 /** Deterministic 6-digit code for a 10-minute window (no storage, works across instances). */
 const WINDOW_SEC = 600;
 function codeFor(email, windowIndex) {
-  const normalized = sanitizeEmail(email).toLowerCase(); // IMPORTANT: trim + lowercase
+  const normalized = sanitizeEmail(email).toLowerCase(); // trim + lowercase
   const h = crypto
     .createHmac("sha256", process.env.VERIFICATION_SECRET)
     .update(normalized + ":" + String(windowIndex))
@@ -51,3 +51,4 @@ export async function parseJson(req) {
   } catch {
     return {};
   }
+}
