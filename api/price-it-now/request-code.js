@@ -13,7 +13,6 @@ export default async function handler(req, res) {
   try {
     const sg = initSendgrid();
     const code = makeVerificationCode(email);
-
     await sg.send({
       to: email,
       from: process.env.FROM_EMAIL,
@@ -22,18 +21,14 @@ export default async function handler(req, res) {
              <p>Your verification code is: <strong style="font-size:18px">${code}</strong></p>
              <p>This code expires in about 10 minutes.</p>`,
     });
-
     return res.status(200).json({ verificationId: "ok" });
   } catch (err) {
     const body = err?.response?.body;
     console.error("request-code error", body || err);
-
-    // Friendlier client error for common SendGrid suppression/bounce cases
     const msg = (body?.errors || []).map(e => e?.message || "").join("; ");
     if (/suppressed|bounce|blocked|no such user/i.test(msg)) {
       return res.status(400).json({ error: "suppressed" });
     }
-
     return res.status(500).json({ error: "failed to send code" });
   }
 }
