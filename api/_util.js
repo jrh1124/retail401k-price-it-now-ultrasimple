@@ -19,9 +19,10 @@ export function isValidEmail(email) {
 /** Deterministic 6-digit code for a 10-minute window (no storage, works across instances). */
 const WINDOW_SEC = 600;
 function codeFor(email, windowIndex) {
+  const normalized = sanitizeEmail(email).toLowerCase(); // IMPORTANT: trim + lowercase
   const h = crypto
     .createHmac("sha256", process.env.VERIFICATION_SECRET)
-    .update(email.toLowerCase() + ":" + String(windowIndex))
+    .update(normalized + ":" + String(windowIndex))
     .digest("hex");
   return String(parseInt(h.slice(-8), 16) % 1_000_000).padStart(6, "0");
 }
@@ -39,11 +40,14 @@ export function checkVerificationCode(email, code, nowMs = Date.now()) {
 /** Safe JSON parse for Vercel Node functions. */
 export async function parseJson(req) {
   if (req.body && typeof req.body === "object") return req.body;
-  if (typeof req.body === "string") { try { return JSON.parse(req.body); } catch { return {}; } }
+  if (typeof req.body === "string") {
+    try { return JSON.parse(req.body); } catch { return {}; }
+  }
   try {
     const chunks = [];
     for await (const ch of req) chunks.push(Buffer.isBuffer(ch) ? ch : Buffer.from(ch));
     const raw = Buffer.concat(chunks).toString("utf8");
     return raw ? JSON.parse(raw) : {};
-  } catch { return {}; }
-}
+  } catch {
+    return {};
+  }
