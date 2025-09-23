@@ -1,2 +1,10 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = { content: ["./index.html","./**/*.{ts,tsx}"], theme: { extend: {} }, plugins: [] }
+module.exports = {
+  content: [
+    "./index.html",
+    "./main.tsx",
+    "./PriceItNow.tsx",
+  ],
+  theme: { extend: {} },
+  plugins: [],
+};
