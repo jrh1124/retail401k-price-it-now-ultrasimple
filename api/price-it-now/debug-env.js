@@ -3,5 +3,6 @@ export default function handler(_req, res) {
     has_SENDGRID_API_KEY: !!process.env.SENDGRID_API_KEY,
     has_FROM_EMAIL: !!process.env.FROM_EMAIL,
     has_TEAM_EMAIL: !!process.env.TEAM_EMAIL,
+    has_VERIFICATION_SECRET: !!process.env.VERIFICATION_SECRET,
   });
 }
