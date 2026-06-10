@@ -401,7 +401,6 @@ export default function PriceItNow() {
         email: contact.email,
         contact,
         recaptchaToken,
-        anonymousSessionId: getAnonymousSessionId(),
       });
       setVerificationId(res?.verificationId || "ok");
       setModalStep("verify");
