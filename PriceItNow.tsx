@@ -303,9 +303,12 @@ export default function PriceItNow() {
     plan_type: isStartup ? "startup_plan" : "existing_plan",
     has_existing_plan: hasExisting,
     eligible_employees: Number(eligible) || 0,
+    employee_count: Number(eligible) || 0,
     participants: Number(participants) || 0,
     fee_base: Number(feeBase) || 0,
     total_annual_cost: Number(totalAnnualCost) || 0,
+    estimated_cost: Number(totalAnnualCost) || 0,
+    estimated_credit: fiveYearRows?.[0]?.totalCredits || 0,
     tpa_billing: tpaBilling,
     auto_enrollment: assumedAutoEnroll,
   });
@@ -316,6 +319,68 @@ export default function PriceItNow() {
     trackEvent("pin_results_viewed", payload);
     logAnonymousEvent("results_viewed", payload);
   }
+
+  const handleScheduleCall = () => {
+    const payload = {
+      ...eventPayload(),
+      source: "price-it-now-results",
+      timestamp: new Date().toISOString(),
+    };
+
+    trackEvent("pin_schedule_call_clicked", payload);
+    logAnonymousEvent("schedule_call_clicked", payload);
+
+    window.open(
+      "https://calendly.com/jheise-1/mep-401k-info-session",
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
+
+  const ScheduleCallCTA = () => (
+    <div style={{
+      textAlign: "center",
+      margin: "24px 0",
+      padding: "20px",
+      backgroundColor: "#F0F7FF",
+      borderRadius: "8px",
+      border: "1px solid #1A6DAB"
+    }}>
+      <p style={{
+        fontSize: "15px",
+        color: "#0F1F38",
+        marginBottom: "12px",
+        fontWeight: "500"
+      }}>
+        Ready to move forward? Book a free 20-minute MEP consultation.
+      </p>
+      <button
+        onClick={handleScheduleCall}
+        style={{
+          backgroundColor: "#1A6DAB",
+          color: "#FFFFFF",
+          border: "none",
+          borderRadius: "6px",
+          padding: "12px 28px",
+          fontSize: "15px",
+          fontWeight: "600",
+          cursor: "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "8px"
+        }}
+      >
+        📅 Book Your Free MEP Consultation →
+      </button>
+      <p style={{
+        fontSize: "12px",
+        color: "#6C757D",
+        marginTop: "8px"
+      }}>
+        No obligation · 20 minutes · Atlas Fiduciary Services
+      </p>
+    </div>
+  );
 
   function buildCalcHtml(creditsHtml = "") {
     const planType = isStartup ? "Start-up 401(k) Plan" : "Existing 401(k) Plan";
@@ -401,6 +466,7 @@ export default function PriceItNow() {
         email: contact.email,
         contact,
         recaptchaToken,
+        anonymousSessionId: getAnonymousSessionId(),
       });
       setVerificationId(res?.verificationId || "ok");
       setModalStep("verify");
@@ -754,6 +820,8 @@ export default function PriceItNow() {
                   </div>
                 </div>
 
+                <ScheduleCallCTA />
+
                 {isStartup && (
                   <section className="rounded-2xl border border-blue-100 bg-blue-50 p-4 page-break">
                     <div className="flex items-center justify-between">
@@ -869,6 +937,8 @@ export default function PriceItNow() {
                           </table>
                         </div>
 
+                        <ScheduleCallCTA />
+
                         <p className="text-[11px] text-slate-500">These tax credit estimates are for educational purposes only and do not constitute tax or legal advice. Consult a qualified tax professional to confirm eligibility.</p>
                       </div>
                     )}
@@ -891,10 +961,9 @@ export default function PriceItNow() {
                         href={CALENDLY_URL}
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={() => {
-                          const payload = eventPayload();
-                          trackEvent("pin_schedule_call_clicked", payload);
-                          logAnonymousEvent("schedule_call_clicked", payload);
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleScheduleCall();
                         }}
                         className="inline-flex items-center rounded-2xl px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700"
                       >
