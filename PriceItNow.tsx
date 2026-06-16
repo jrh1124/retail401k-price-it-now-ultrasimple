@@ -473,7 +473,7 @@ export default function PriceItNow() {
       setResendCooldown(30);
       setCode("");
       setCodeErr("");
-      trackEvent("pin_submit_contact", eventPayload());
+      trackEvent("pin_submit_contact", { ...eventPayload(), ...contact });
     } catch {
       setFormErr("We couldn't send a verification code. Please try again.");
     } finally {
